@@ -6,14 +6,75 @@ Simple explosion force for games
 
 ### Explosion
 
+Explosion code
+
+```csharp
+public class Explosion : MonoBehaviour
+{
+    public float m_Force = 1000.0f;
+    public float m_Radius = 5.0f;
+    public float m_UpForce = 600.0f;
+    public LayerMask m_Layer;
+
+    public void Detonate()
+    {
+        Collider[] colliders = Physics.OverlapSphere(transform.position, m_Radius, m_Layer);
+        foreach (Collider collider in colliders)
+        {
+            Rigidbody body = collider.GetComponent<Rigidbody>();
+            if (!body) continue;
+            
+            body.isKinematic = false;
+            body.AddExplosionForce(m_Force, transform.position, m_Radius, m_UpForce);
+        }
+    }
+
+    public void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(1, 0, 0, 0.1f);
+        Gizmos.DrawSphere(transform.position, m_Radius);
+    }
+}
+```
+
 ### Detonators
+
+Base to detonators
+
+```csharp
+public class Detonator : MonoBehaviour
+{
+    private Explosion m_Explosion;
+
+    private void Awake()
+    {
+        m_Explosion = GetComponent<Explosion>();
+    }
+
+    public void Detonate(float duration = 4.0f, float magnitude = 30.0f)
+    {
+        m_Explosion.Detonate();
+        CameraShake.Instance.ShakeOnce(duration, magnitude);
+        Destroy(gameObject, 0.3f);
+    }
+}
+```
 
 #### Button Detonator
 
 Code to detonate the bomb by a button
 
 ```csharp
+public class ButtonDetonator : Detonator
+{
+    public string m_ButtonName = "Jump";
 
+    private void Update()
+    {
+        if (Input.GetButtonDown(m_ButtonName))
+            Detonate();
+    }
+}
 ```
 
 #### Contact Detonator
@@ -21,7 +82,17 @@ Code to detonate the bomb by a button
 Code to detonate the bomb by contact
 
 ```csharp
+public class ContactDetonator : Detonator
+{
+    public LayerMask m_Layer;
+    public float m_Radius;
 
+    private void FixedUpdate()
+    {
+        if (Physics.CheckSphere(transform.position, m_Radius, m_Layer))
+            Detonate();
+    }
+}
 ```
 
 #### Time Detonator
@@ -29,7 +100,15 @@ Code to detonate the bomb by contact
 Code to detonate the bomb by time
 
 ```csharp
+public class TimeDetonator : MonoBehaviour
+{
+    public float m_Time = 5.0f;
 
+    private void Start()
+    {
+        Invoke("Detonate", m_Time);
+    }
+}
 ```
 
 #### Trigger Detonator
@@ -37,7 +116,16 @@ Code to detonate the bomb by time
 Code to detonate the bomb by a trigger
 
 ```csharp
+public class TriggerDetonator : Detonator
+{
+    public string m_Tag = "Enemy";
 
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag(m_Tag))
+            Detonate();
+    }
+}
 ```
 
 ## License
