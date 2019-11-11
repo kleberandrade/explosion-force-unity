@@ -4,6 +4,12 @@ Simple explosion force for games
 
 ## Methods
 
+<p align="center">
+  <img width="600" src="Images/explosion.gif">
+</p>
+
+## Codes
+
 ### Explosion
 
 Explosion code
